@@ -1,6 +1,7 @@
-require('dotenv').config()
-const fs = require('fs')
-const S3 = require('aws-sdk/clients/s3')
+import dotenv from "dotenv"
+dotenv.config()
+import fs from'fs'
+import S3 from'aws-sdk/clients/s3.js'
 
 const bucketName = process.env.AWS_BUCKET_NAME
 const region = process.env.AWS_BUCKET_REGION
@@ -14,7 +15,7 @@ const s3 = new S3({
 })
 
 // uploads a file to s3
-function uploadFile(file) {
+export const uploadFile= (file)=> {
   const fileStream = fs.createReadStream(file.path)
 
   const uploadParams = {
@@ -25,11 +26,10 @@ function uploadFile(file) {
 
   return s3.upload(uploadParams).promise()
 }
-exports.uploadFile = uploadFile
 
 
 // downloads a file from s3
-function getFileStream(fileKey) {
+export const  getFileStream = (fileKey) =>{
   const downloadParams = {
     Key: fileKey,
     Bucket: bucketName
@@ -37,4 +37,3 @@ function getFileStream(fileKey) {
 
   return s3.getObject(downloadParams).createReadStream()
 }
-exports.getFileStream = getFileStream
