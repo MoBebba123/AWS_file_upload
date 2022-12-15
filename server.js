@@ -1,18 +1,36 @@
-import express  from "express";
-import multer from "multer";
-import cors from "cors";
+import express from 'express'
 
-const upload =  multer({dest:"uploads/"})
+import { unlink } from 'fs'
+import { promisify } from 'util'
+const unlinkFile = promisify(unlink)
 
-const app =  express();
-const PORT = 8000;
+import multer from 'multer'
+const upload = multer({ dest: 'uploads/' })
 
-app.use(cors());
-app.post("/images",upload.single("image"),(req, res,next)=>{
-    const file = req.file;
-    const description = req.body.description;
-    console.log(file)
-    res.send("done")
+import { uploadFile, getFileStream } from './s3.js'
+
+const app = express()
+
+app.get('/images/:key', (req, res) => {
+  console.log(req.params)
+  const key = req.params.key
+  const readStream = getFileStream(key)
+
+  readStream.pipe(res)
 })
 
-app.listen(PORT, ()=>{ console.log("app is running on Port " + PORT ) })
+app.post('/images', upload.single('image'), async (req, res) => {
+  const file = req.file
+  //console.log(file)
+
+  // apply filter
+  // resize 
+
+  const result = await uploadFile(file)
+  await unlinkFile(file.path)
+  console.log(result)
+  const description = req.body.description
+  res.send({imagePath: `/images/${result.Key}`})
+})
+
+app.listen(8080, () => console.log("listening on port 8080"))
